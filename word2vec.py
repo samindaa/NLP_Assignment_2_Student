@@ -18,6 +18,7 @@ def sigmoid(x):
     """
 
     ### YOUR CODE HERE
+    s = 1.0 / (1. + np.exp(-x))
     ### END YOUR CODE
 
     return s
@@ -57,6 +58,13 @@ def naiveSoftmaxLossAndGradient(
     """
 
     ### YOUR CODE HERE
+    outsideVector = outsideVectors[outsideWordIdx]
+    zExp = np.exp(np.dot(outsideVectors, centerWordVec))
+    loss = -np.sum(centerWordVec * outsideVector) + np.log(np.sum(zExp))
+    delta = zExp / np.sum(zExp)
+    delta[outsideWordIdx] -= 1. # (y_hat - y)
+    gradCenterVec = np.dot(delta, outsideVectors)
+    gradOutsideVecs = np.dot(delta.reshape(-1, 1), centerWordVec.reshape(1, -1))
     ### END YOUR CODE
 
     return loss, gradCenterVec, gradOutsideVecs
@@ -146,6 +154,15 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
     gradOutsideVectors = np.zeros(outsideVectors.shape)
 
     ### YOUR CODE HERE
+    currentCenterWordIdx = word2Ind[currentCenterWord]
+    centerWordVec = centerWordVectors[currentCenterWordIdx]
+    for outsideWord in outsideWords:
+        #outsideVectors
+        lossCurrent, gradCenterVec, gradOutsideVecs = word2vecLossAndGradient(centerWordVec, word2Ind[outsideWord],
+                                                                              outsideVectors, dataset)
+        loss += lossCurrent
+        gradCenterVecs[currentCenterWordIdx] += gradCenterVec
+        gradOutsideVectors += gradOutsideVecs
     ### END YOUR CODE
 
     return loss, gradCenterVecs, gradOutsideVectors
